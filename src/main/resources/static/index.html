@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grid Magic</title>
+    <style>
+        canvas {
+            border: 1px solid #333;
+            background-color: #f4f4f4;
+        }
+        #controls {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h2>Grid Magic</h2>
+<canvas id="gridCanvas" width="600" height="600"></canvas>
+<div id="controls">
+    <button onclick="generate()">🔁 Магическая кнопка</button>
+    <p id="info"></p>
+</div>
+
+<script>
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    const size = 10;
+    const step = canvas.width / size;
+    const origin = { x: canvas.width / 2, y: canvas.height / 2 };
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i <= size; i++) {
+            let pos = i * step;
+            // vertical
+            ctx.beginPath();
+            ctx.moveTo(pos, 0);
+            ctx.lineTo(pos, canvas.height);
+            ctx.stroke();
+            // horizontal
+            ctx.beginPath();
+            ctx.moveTo(0, pos);
+            ctx.lineTo(canvas.width, pos);
+            ctx.stroke();
+        }
+
+        // Draw central axes (X and Y)
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+
+        // Y axis
+        ctx.beginPath();
+        ctx.moveTo(origin.x, 0);
+        ctx.lineTo(origin.x, canvas.height);
+        ctx.stroke();
+
+        // X axis
+        ctx.beginPath();
+        ctx.moveTo(0, origin.y);
+        ctx.lineTo(canvas.width, origin.y);
+        ctx.stroke();
+    }
+
+    function toCanvasCoord(x, y) {
+        return {
+            x: origin.x + x * step,
+            y: origin.y - y * step
+        };
+    }
+
+    function drawPoint(x, y) {
+        const c = toCanvasCoord(x, y);
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Подпись координат возле точки
+        ctx.fillStyle = 'black';
+        ctx.font = '12px Arial';
+        ctx.fillText(`(${x}, ${y})`, c.x + 6, c.y - 6);
+    }
+
+    function drawLine(p1, p2) {
+        const c1 = toCanvasCoord(p1.x, p1.y);
+        const c2 = toCanvasCoord(p2.x, p2.y);
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(c1.x, c1.y);
+        ctx.lineTo(c2.x, c2.y);
+        ctx.stroke();
+    }
+
+    async function generate() {
+        const response = await fetch('/api/generate');
+        const data = await response.json();
+
+        drawGrid();
+
+        const points = data.points;
+        document.getElementById('info').textContent = '';
+
+        points.forEach(p => drawPoint(p.x, p.y));
+
+        // Рисуем линии между точками, если их больше 1
+        if (points.length > 1) {
+            for (let i = 0; i < points.length - 1; i++) {
+                drawLine(points[i], points[i + 1]);
+            }
+            // замыкаем для всех фигур, если их больше 2 (т.е. >= 3)
+            if (points.length >= 3) {
+                drawLine(points[points.length - 1], points[0]);
+            }
+        }
+
+        // Выводим информацию о фигуре
+        let figureName = data.type;
+        if (data.type === 'triangle' && data.triangleType) {
+            figureName += ` (${data.triangleType})`;
+        }
+
+        document.getElementById('info').textContent = 'Фигура: ' + figureName;
+    }
+
+    // Нарисовать начальную сетку
+    drawGrid();
+</script>
+</body>
+</html>
