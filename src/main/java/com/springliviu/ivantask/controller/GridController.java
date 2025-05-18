@@ -17,7 +17,6 @@ public class GridController {
 
     @GetMapping("/api/generate")
     public Map<String, Object> generateFigure() {
-        // Обработка запроса и возврат данных
         return gridService.generateFigure();
     }
 }

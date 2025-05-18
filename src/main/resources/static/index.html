@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Grid Magic</title>
@@ -30,35 +30,30 @@
 
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         ctx.strokeStyle = '#ccc';
         ctx.lineWidth = 1;
 
         for (let i = 0; i <= size; i++) {
             let pos = i * step;
-            // vertical
             ctx.beginPath();
             ctx.moveTo(pos, 0);
             ctx.lineTo(pos, canvas.height);
             ctx.stroke();
-            // horizontal
+
             ctx.beginPath();
             ctx.moveTo(0, pos);
             ctx.lineTo(canvas.width, pos);
             ctx.stroke();
         }
 
-        // Draw central axes (X and Y)
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
 
-        // Y axis
         ctx.beginPath();
         ctx.moveTo(origin.x, 0);
         ctx.lineTo(origin.x, canvas.height);
         ctx.stroke();
 
-        // X axis
         ctx.beginPath();
         ctx.moveTo(0, origin.y);
         ctx.lineTo(canvas.width, origin.y);
@@ -72,22 +67,21 @@
         };
     }
 
-    function drawPoint(x, y) {
+    function drawPoint(x, y, color) {
         const c = toCanvasCoord(x, y);
-        ctx.fillStyle = 'red';
+        ctx.fillStyle = color || 'black';
         ctx.beginPath();
         ctx.arc(c.x, c.y, 5, 0, 2 * Math.PI);
         ctx.fill();
 
-        // Подпись координат возле точки
         ctx.fillStyle = 'black';
         ctx.font = '12px Arial';
         ctx.fillText(`(${x}, ${y})`, c.x + 6, c.y - 6);
     }
 
-    function drawLine(p1, p2) {
-        const c1 = toCanvasCoord(p1.x, p1.y);
-        const c2 = toCanvasCoord(p2.x, p2.y);
+    function drawLine(fromPoint, toPoint) {
+        const c1 = toCanvasCoord(fromPoint.x, fromPoint.y);
+        const c2 = toCanvasCoord(toPoint.x, toPoint.y);
         ctx.strokeStyle = 'blue';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -97,37 +91,34 @@
     }
 
     async function generate() {
-        const response = await fetch('/api/generate');
-        const data = await response.json();
+        const infoEl = document.getElementById('info');
+        infoEl.textContent = 'Генерация...';
 
-        drawGrid();
+        try {
+            const response = await fetch('/api/generate');
+            if (!response.ok) throw new Error('Сервер вернул ошибку');
 
-        const points = data.points;
-        document.getElementById('info').textContent = '';
+            const data = await response.json();
 
-        points.forEach(p => drawPoint(p.x, p.y));
+            drawGrid();
+            const points = data.points;
+            const edges = data.edges;
 
-        // Рисуем линии между точками, если их больше 1
-        if (points.length > 1) {
-            for (let i = 0; i < points.length - 1; i++) {
-                drawLine(points[i], points[i + 1]);
-            }
-            // замыкаем для всех фигур, если их больше 2 (т.е. >= 3)
-            if (points.length >= 3) {
-                drawLine(points[points.length - 1], points[0]);
-            }
+            points.forEach(p => drawPoint(p.x, p.y, p.color));
+
+            edges.forEach(edge => {
+                const from = points[edge.from];
+                const to = points[edge.to];
+                drawLine(from, to);
+            });
+
+            infoEl.textContent = 'Фигура: ' + data.type;
+        } catch (e) {
+            infoEl.textContent = 'Ошибка: ' + e.message;
+            console.error(e);
         }
-
-        // Выводим информацию о фигуре
-        let figureName = data.type;
-        if (data.type === 'triangle' && data.triangleType) {
-            figureName += ` (${data.triangleType})`;
-        }
-
-        document.getElementById('info').textContent = 'Фигура: ' + figureName;
     }
 
-    // Нарисовать начальную сетку
     drawGrid();
 </script>
 </body>
