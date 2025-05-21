@@ -1,7 +1,7 @@
 ```markdown
 # Grid Magic
 
-[Скачать .jar (v2.0.0)](https://github.com/LiviuPascan/grid_magic/releases/download/v2.0.0/ivan-task-0.0.1-SNAPSHOT.jar)
+[Скачать .jar (v2.0.0)](https://github.com/LiviuPascan/grid_magic/releases/download/v2.0.0/IvanTask-0.0.1-SNAPSHOT.jar)
 
 > Простой генератор случайных фигур на координатной сетке 10×10. Работает локально, без установки Maven/IDE.
 
