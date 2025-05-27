@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Grid Magic</title>
@@ -17,22 +17,27 @@
 <h2>Grid Magic</h2>
 <canvas id="gridCanvas" width="600" height="600"></canvas>
 <div id="controls">
-    <button onclick="generate()">🔁 Магическая кнопка</button>
+    <button onclick="generate()">Generate</button>
 
-    <!-- Новый функционал -->
     <div style="margin-top: 10px;">
-        <label for="shapeSelect">Искать фигуру:</label>
+        <label for="shapeSelect">Find figure:</label>
         <select id="shapeSelect">
-            <option value="треугольник">треугольник</option>
-            <option value="четырёхугольник">четырёхугольник</option>
-            <option value="фрагмент">фрагмент</option>
-            <option value="отрезок">отрезок</option>
-            <option value="точка">точка</option>
-            <option value="пятиугольник">пятиугольник</option>
-            <option value="шестиугольник">шестиугольник</option>
+            <option value="point">point</option>
+            <option value="segment">segment</option>
+            <option value="fragment">fragment</option>
+            <option value="triangle: right">right triangle</option>
+            <option value="triangle: isosceles">isosceles triangle</option>
+            <option value="triangle: scalene">scalene triangle</option>
+            <option value="quadrilateral: square">square</option>
+            <option value="quadrilateral: rectangle">rectangle</option>
+            <option value="quadrilateral: rhombus">rhombus</option>
+            <option value="quadrilateral: trapezoid">trapezoid</option>
+            <option value="quadrilateral: general">general quadrilateral</option>
+            <option value="pentagon">pentagon</option>
+            <option value="hexagon">hexagon</option>
         </select>
-        <button onclick="findFigure()">🔍 Искать фигуру</button>
-        <button onclick="stopSearch()">⛔ Остановить</button>
+        <button onclick="findFigure()">Find</button>
+        <button onclick="stopSearch()">Stop</button>
     </div>
 
     <p id="info"></p>
@@ -44,35 +49,29 @@
     const size = 10;
     const step = canvas.width / size;
     const origin = { x: canvas.width / 2, y: canvas.height / 2 };
-
     let searchActive = false;
 
     function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = '#ccc';
         ctx.lineWidth = 1;
-
         for (let i = 0; i <= size; i++) {
             let pos = i * step;
             ctx.beginPath();
             ctx.moveTo(pos, 0);
             ctx.lineTo(pos, canvas.height);
             ctx.stroke();
-
             ctx.beginPath();
             ctx.moveTo(0, pos);
             ctx.lineTo(canvas.width, pos);
             ctx.stroke();
         }
-
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 2;
-
         ctx.beginPath();
         ctx.moveTo(origin.x, 0);
         ctx.lineTo(origin.x, canvas.height);
         ctx.stroke();
-
         ctx.beginPath();
         ctx.moveTo(0, origin.y);
         ctx.lineTo(canvas.width, origin.y);
@@ -92,7 +91,6 @@
         ctx.beginPath();
         ctx.arc(c.x, c.y, 5, 0, 2 * Math.PI);
         ctx.fill();
-
         ctx.fillStyle = 'black';
         ctx.font = '12px Arial';
         ctx.fillText(`(${x}, ${y})`, c.x + 6, c.y - 6);
@@ -111,31 +109,24 @@
 
     async function generate() {
         const infoEl = document.getElementById('info');
-        infoEl.textContent = 'Генерация...';
-
+        infoEl.textContent = 'Generating...';
         try {
             const response = await fetch('/api/generate');
-            if (!response.ok) throw new Error('Сервер вернул ошибку');
-
+            if (!response.ok) throw new Error('Server returned an error');
             const data = await response.json();
-
             drawGrid();
             const points = data.points;
             const edges = data.edges;
-
             points.forEach(p => drawPoint(p.x, p.y, p.color));
-
             edges.forEach(edge => {
                 const from = points[edge.from];
                 const to = points[edge.to];
                 drawLine(from, to);
             });
-
-            infoEl.textContent = 'Фигура: ' + data.type;
+            infoEl.textContent = 'Figure: ' + data.type;
             return data.type;
-
         } catch (e) {
-            infoEl.textContent = 'Ошибка: ' + e.message;
+            infoEl.textContent = 'Error: ' + e.message;
             console.error(e);
             return null;
         }
@@ -145,26 +136,23 @@
         const desiredType = document.getElementById('shapeSelect').value;
         searchActive = true;
         const infoEl = document.getElementById('info');
-        infoEl.textContent = 'Поиск фигуры: ' + desiredType;
-
+        infoEl.textContent = 'Searching for: ' + desiredType;
         async function loop() {
             if (!searchActive) return;
             const type = await generate();
-
             if (type && type.includes(desiredType)) {
-                infoEl.textContent = 'Найдена фигура: ' + type;
+                infoEl.textContent = 'Found: ' + type;
                 searchActive = false;
             } else {
-                setTimeout(loop, 600); // Повтор через 600 мс
+                setTimeout(loop, 600);
             }
         }
-
         loop();
     }
 
     function stopSearch() {
         searchActive = false;
-        document.getElementById('info').textContent = 'Поиск остановлен';
+        document.getElementById('info').textContent = 'Search stopped';
     }
 
     drawGrid();

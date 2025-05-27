@@ -1,5 +1,8 @@
 package com.springliviu.ivantask.model;
 
+/**
+ * Basic 2D point with integer coordinates.
+ */
 public class Point {
     private int x;
     private int y;

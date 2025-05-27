@@ -15,12 +15,15 @@ public class GridService {
     private static final int MAX_COORD = 5;
     private final Random random = new Random();
 
+    /**
+     * Generates a random geometric figure with metadata: points, edges, type.
+     */
     public Map<String, Object> generateFigure() {
-        int numPoints = random.nextInt(6) + 1; // от 1 до 6 включительно
+        int numPoints = random.nextInt(6) + 1; // between 1 and 6 points
         Set<String> used = new HashSet<>();
         List<Point> originalPoints = new ArrayList<>();
 
-        // Генерация уникальных точек
+        // Generate unique random points within the coordinate range
         while (originalPoints.size() < numPoints) {
             int x = random.nextInt(MAX_COORD - MIN_COORD + 1) + MIN_COORD;
             int y = random.nextInt(MAX_COORD - MIN_COORD + 1) + MIN_COORD;
@@ -29,15 +32,15 @@ public class GridService {
             }
         }
 
-        // Центрируем точки ближе к центру
+        // Adjust points to center them closer to origin
         centerPoints(originalPoints);
 
-        // Если ≥ 3, сортируем по углу для красивой отрисовки
+        // If there are at least 3 points, sort by angle to make a polygonal loop
         List<Integer> drawOrder = originalPoints.size() >= 3
                 ? sortByAngle(originalPoints)
                 : defaultOrder(originalPoints.size());
 
-        // Готовим точки для отрисовки
+        // Prepare colored points for visualization
         String[] colors = {"red", "green", "blue", "orange", "magenta", "black", "cyan"};
         List<ColoredPoint> visualPoints = new ArrayList<>();
         List<Point> orderedForAnalysis = new ArrayList<>();
@@ -47,18 +50,17 @@ public class GridService {
             orderedForAnalysis.add(p);
         }
 
-        // Строим ребра
+        // Create edges to connect points
         List<Edge> edges = new ArrayList<>();
         for (int i = 0; i < orderedForAnalysis.size() - 1; i++) {
             edges.add(new Edge(i, i + 1));
         }
         if (orderedForAnalysis.size() >= 3) {
-            edges.add(new Edge(orderedForAnalysis.size() - 1, 0)); // замыкаем
+            edges.add(new Edge(orderedForAnalysis.size() - 1, 0)); // close the polygon
         }
 
-        // Определяем тип фигуры
+        // Identify the type of figure
         String type = FigureIdentifier.identifyFigure(orderedForAnalysis, edges);
-
 
         Map<String, Object> result = new HashMap<>();
         result.put("points", visualPoints);

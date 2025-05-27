@@ -1,5 +1,8 @@
 package com.springliviu.ivantask.model;
 
+/**
+ * Point with an associated color for visualization.
+ */
 public class ColoredPoint extends Point {
     private String color;
 
